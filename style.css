@@ -497,3 +497,19 @@ th {
         background-color: #f1f5f9 !important;
     }
 }
+
+.zoom-controller {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #1e293b;
+  padding: 8px 15px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.zoom-controller input[type="range"] {
+  accent-color: #10b981; /* لون ألماني/أخضر يتماشى مع زر الإدخال */
+  cursor: pointer;
+}

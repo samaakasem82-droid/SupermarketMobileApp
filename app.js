@@ -331,5 +331,29 @@ function promptAddNewUnit(inputId) {
     }
 }
 
+// ==========================================
+// 🔍 نظام التحكم في حجم عرض السيستم (System Zoom)
+// ==========================================
+function changeSystemZoom(zoomLevel) {
+    const zoomValEl = document.getElementById('zoomValue');
+    if (zoomValEl) {
+        zoomValEl.innerText = zoomLevel + '%';
+    }
+    document.body.style.zoom = zoomLevel + '%';
+    localStorage.setItem('userSystemZoom', zoomLevel);
+}
+
+// إعادة تطبيق الحجم المحفوظ تلقائياً عند فتح السيستم
+document.addEventListener('DOMContentLoaded', () => {
+    const savedZoom = localStorage.getItem('userSystemZoom');
+    if (savedZoom) {
+        const zoomInput = document.getElementById('zoomRange');
+        if (zoomInput) zoomInput.value = savedZoom;
+        changeSystemZoom(savedZoom);
+    }
+});
+
+// إتاحة الدالة للواجهة العامة
+window.changeSystemZoom = changeSystemZoom;
 window.updateDashboardStats = updateDashboardStats;
 window.promptAddNewUnit = promptAddNewUnit;
