@@ -8,7 +8,7 @@ const ASSETS = [
   './products.js',
   './inventory-view.js',
   './stocktaking.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+  './icon.jpg'
 ];
 
 self.addEventListener('install', (e) => {
