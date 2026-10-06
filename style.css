@@ -513,3 +513,43 @@ th {
   accent-color: #10b981; /* لون ألماني/أخضر يتماشى مع زر الإدخال */
   cursor: pointer;
 }
+
+/* تنسيق زر تثبيت التطبيق */
+.btn-install {
+  background-color: #00b894; /* لون أخضر متناسق مع الواجهة */
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+  transition: all 0.3s ease;
+  margin: 5px;
+}
+
+/* تأثير التمرير بالماوس أو الضغط */
+.btn-install:hover {
+  background-color: #00a884;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 184, 148, 0.4);
+}
+
+.btn-install:active {
+  transform: translateY(0);
+}
+
+/* حركة نبض خفيفة للزر لجذب انتباه العميل على الويب */
+@keyframes installPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.btn-install-animated {
+  animation: installPulse 2s infinite;
+}

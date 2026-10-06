@@ -8,7 +8,7 @@ const ASSETS = [
   './products.js',
   './inventory-view.js',
   './stocktaking.js',
-  './icon.jpg'
+  './icon.png'
 ];
 
 self.addEventListener('install', (e) => {

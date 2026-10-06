@@ -17,6 +17,46 @@ function initLicenseSecurityCheck() {
     renderLicenseModal();
 }
 
+let deferredPrompt;
+const installBtn = document.getElementById('installAppBtn');
+
+// 1. التحقق هل المستخدم فاتح من داخل التطبيق المثبّت بالفعل؟
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+if (!isStandalone) {
+  // المستخدم فاتح من المتصفح (الويب) -> نجهز إشعار وزر التثبيت
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // منع الإشعار الافتراضي البطيء للمتصفح
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // إظهار زر التثبيت الخاص بك فوراً في الصفحة
+    if (installBtn) {
+      installBtn.style.display = 'inline-block';
+    }
+  });
+
+  // عند الضغط على زر التثبيت
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt(); // إظهار نافذة التثبيت للعميل
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('تم تثبيت التطبيق بنجاح');
+          installBtn.style.display = 'none'; // إخفاء الزر بعد التثبيت
+        }
+        deferredPrompt = null;
+      }
+    });
+  }
+} else {
+  // المستخدم فاتح من داخل التطبيق بالفعل -> نضمن إخفاء الزر تماماً
+  if (installBtn) {
+    installBtn.style.display = 'none';
+  }
+}
+
 // 1. حقن استايلات الشاشة التفاعلية بأعلى جودة
 function injectLicenseModalStyles() {
     if (document.getElementById('license-styles')) return;
