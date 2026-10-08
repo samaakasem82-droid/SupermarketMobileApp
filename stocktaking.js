@@ -1,6 +1,3 @@
-// ==========================================
-// 1. إدارة متغيرات حالة الجرد والتهيئة
-// ==========================================
 let selectedProductForStock = null;
 let stockList = JSON.parse(localStorage.getItem('stockList') || '[]');
 
@@ -9,16 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
     renderStockList();
 });
 
-// ==========================================
-// 2. تهيئة مستمعي الأحداث (Event Listeners)
-// ==========================================
 function initStocktakingListeners() {
     const searchInput = document.getElementById('st-search');
     const resultsDiv = document.getElementById('st-results');
     const packQtyInput = document.getElementById('st-pack-qty');
     const pieceQtyInput = document.getElementById('st-piece-qty');
 
-    // البحث الفوري عن المنتجات
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.trim().toLowerCase();
@@ -43,11 +36,9 @@ function initStocktakingListeners() {
         });
     }
 
-    // تحديث الحسابات الآلية عند كتابة الأعداد
     if (packQtyInput) packQtyInput.addEventListener('input', calculateCurrentStockTotal);
     if (pieceQtyInput) pieceQtyInput.addEventListener('input', calculateCurrentStockTotal);
 
-    // نموذج تعديل عنصر الجرد
     const editStockForm = document.getElementById('edit-stock-form');
     if (editStockForm) {
         editStockForm.addEventListener('submit', (e) => {
@@ -55,15 +46,6 @@ function initStocktakingListeners() {
             saveStockEdit();
         });
     }
-}
-
-// ==========================================
-// 3. الدوال المساعدة والحسابات
-// ==========================================
-function extractPieceCount(unitStr) {
-    if (!unitStr) return 1;
-    const match = unitStr.match(/\d+/);
-    return match ? parseInt(match[0], 10) : 1;
 }
 
 function selectProductForStock(productId) {
@@ -112,12 +94,9 @@ function calculateCurrentStockTotal() {
     document.getElementById('st-breakdown').textContent = `إجمالي عدد القطع المجرودة: ${totalPiecesCount} قطعة (${packQty} عبوة + ${pieceQty} قطعة منفردة)`;
 }
 
-// ==========================================
-// 4. إدارة قائمة الجرد والتخزين
-// ==========================================
 function addCurrentProductToStockList() {
     if (!selectedProductForStock) {
-        alert('برجاء اختيار سلعة أولاً للبدء للجرد!');
+        if (typeof showToast === 'function') showToast('⚠️ برجاء اختيار سلعة أولاً للبدء للجرد!', 'warning');
         return;
     }
 
@@ -125,7 +104,7 @@ function addCurrentProductToStockList() {
     const pieceQty = parseInt(document.getElementById('st-piece-qty').value) || 0;
 
     if (packQty === 0 && pieceQty === 0) {
-        alert('برجاء إدخال الكمية المجرودة (عبوات أو قطع)!');
+        if (typeof showToast === 'function') showToast('⚠️ برجاء إدخال الكمية المجرودة (عبوات أو قطع)!', 'warning');
         return;
     }
 
@@ -158,7 +137,7 @@ function addCurrentProductToStockList() {
     selectedProductForStock = null;
 
     renderStockList();
-    alert('تم إضافة المنتج بنجاح إلى كشف الجرد!');
+    if (typeof showToast === 'function') showToast('تم إضافة المنتج بنجاح إلى كشف الجرد! 📋 ');
 }
 
 function renderStockList() {
@@ -221,6 +200,7 @@ function closeEditStockModal() {
     }
 }
 
+// حفظ تعديل الجرد مع فتح النافذة المنبثقة المخصصة للنجاح
 function saveStockEdit() {
     const id = parseInt(document.getElementById('edit-stock-id').value);
     const packQty = parseInt(document.getElementById('edit-stock-pack-qty').value) || 0;
@@ -241,32 +221,65 @@ function saveStockEdit() {
 
         renderStockList();
         closeEditStockModal();
-        alert('تم تعديل بيانات الجرد بنجاح!');
+
+        // استدعاء نافذة نجاح التعديل المخصصة الاحترافية
+        if (typeof openSuccessEditModal === 'function') {
+            openSuccessEditModal();
+        } else if (typeof showToast === 'function') {
+            showToast('✨ تم تعديل بيانات الجرد بنجاح!');
+        }
     }
 }
 
+// حذف عنصر فردي من كشف الجرد باستخدام نافذة التأكيد المنبثقة المخصصة
 function removeStockItem(id) {
-    if (confirm("هل أنت تأكد من حذف هذا المنتج من كشف الجرد؟")) {
-        stockList = stockList.filter(item => item.id !== id);
-        localStorage.setItem('stockList', JSON.stringify(stockList));
-        renderStockList();
+    if (typeof openConfirmDeleteModal === 'function') {
+        openConfirmDeleteModal(
+            "تأكيد حذف السلعة من الجرد",
+            "هل أنت تأكد من رغبتك في حذف هذا المنتج من كشف الجرد؟",
+            function() {
+                stockList = stockList.filter(item => item.id !== id);
+                localStorage.setItem('stockList', JSON.stringify(stockList));
+                renderStockList();
+                if (typeof showToast === 'function') showToast('🗑️ تم حذف السلعة من الكشف', 'danger');
+            }
+        );
+    } else {
+        if (confirm("هل أنت تأكد من حذف هذا المنتج من كشف الجرد؟")) {
+            stockList = stockList.filter(item => item.id !== id);
+            localStorage.setItem('stockList', JSON.stringify(stockList));
+            renderStockList();
+            if (typeof showToast === 'function') showToast('🗑️ تم حذف السلعة من الكشف', 'danger');
+        }
     }
 }
 
+// مسح كشف الجرد بالكامل باستخدام نافذة التأكيد المنبثقة المخصصة
 function clearStockList() {
-    if (confirm("هل أنت تأكد من مسح كشف الجرد بالكامل؟")) {
-        stockList = [];
-        localStorage.setItem('stockList', JSON.stringify([]));
-        renderStockList();
+    if (typeof openConfirmDeleteModal === 'function') {
+        openConfirmDeleteModal(
+            "تأكيد مسح كشف الجرد",
+            "هل أنت تأكد من مسح كشف الجرد بالكامل؟ لن يمكنك التراجع عن هذه الخطوة.",
+            function() {
+                stockList = [];
+                localStorage.setItem('stockList', JSON.stringify([]));
+                renderStockList();
+                if (typeof showToast === 'function') showToast('🗑️ تم مسح كشف الجرد بالكامل', 'danger');
+            }
+        );
+    } else {
+        if (confirm("هل أنت تأكد من مسح كشف الجرد بالكامل؟")) {
+            stockList = [];
+            localStorage.setItem('stockList', JSON.stringify([]));
+            renderStockList();
+            if (typeof showToast === 'function') showToast('🗑️ تم مسح كشف الجرد بالكامل', 'danger');
+        }
     }
 }
 
-// ==========================================
-// 5. التصدير والمعاينة والطباعة
-// ==========================================
 function exportStockListToWord() {
     if (stockList.length === 0) {
-        alert("كشف الجرد فارغ حالياً!");
+        if (typeof showToast === 'function') showToast('⚠️ كشف الجرد فارغ حالياً!', 'warning');
         return;
     }
 
@@ -321,7 +334,7 @@ function exportStockListToWord() {
 
 function exportStockListToPDF() {
     if (!stockList || stockList.length === 0) {
-        alert("كشف الجرد فارغ حالياً!");
+        if (typeof showToast === 'function') showToast('⚠️ كشف الجرد فارغ حالياً!', 'warning');
         return;
     }
 
@@ -426,11 +439,10 @@ function triggerPrintFromModal() {
 function downloadPDFFromModal() {
     const originalElement = document.getElementById('pdf-content-area');
     if (!originalElement) {
-        alert("لا يوجد محتوى لتصديره!");
+        if (typeof showToast === 'function') showToast('⚠️ لا يوجد محتوى لتصديره!', 'warning');
         return;
     }
 
-    // إنشاء حاوية خفية كاملة الارتفاع لمنع تقطيع الجدول بسبب نافذة Modal Scroll
     const tempContainer = document.createElement('div');
     tempContainer.style.position = 'absolute';
     tempContainer.style.left = '-9999px';
@@ -464,13 +476,10 @@ function downloadPDFFromModal() {
         if (document.body.contains(tempContainer)) {
             document.body.removeChild(tempContainer);
         }
-        alert("حدث خطأ أثناء إنشاء ملف الـ PDF. يمكنك استخدام زر الطباعة وحفظ الصفحة كـ PDF بدلاً من ذلك.");
+        if (typeof showToast === 'function') showToast('❌ حدث خطأ أثناء إنشاء ملف الـ PDF.', 'danger');
     });
 }
 
-// ==========================================
-// 6. تصدير الدوال للنطاق العام (Global Scope)
-// ==========================================
 window.selectProductForStock = selectProductForStock;
 window.addCurrentProductToStockList = addCurrentProductToStockList;
 window.openEditStockModal = openEditStockModal;

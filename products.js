@@ -5,14 +5,33 @@ function extractPieceCount(unitStr) {
     return match ? parseInt(match[0], 10) : 1;
 }
 
-// دالة لتحديث قائمة الوحدات المقترحة (datalist) بالوحدات الجديدة
-function updateUnitsDatalist() {
-    const datalist = document.getElementById('units-list');
-    if (!datalist) return;
-
+// دالة لتحديث جميع قوائم المقترحات المنسدلة (Products, Categories, Units Datalists)
+function updateAllDatalists() {
     const products = window.products || JSON.parse(localStorage.getItem('products') || '[]');
-    
-    // الوحدات الافتراضية
+
+    // 1. قائمة أسماء المنتجات
+    const defaultProductNames = ["كوكاكولا كانز", "شيبسي عائلي", "جبنة فيتا 250جم", "أرز مصري 1كجم"];
+    const savedProductNames = JSON.parse(localStorage.getItem('saved_product_names') || '[]');
+    const existingProductNames = products.map(p => p.name).filter(Boolean);
+    const allProductNames = [...new Set([...defaultProductNames, ...savedProductNames, ...existingProductNames])];
+
+    const productsListEl = document.getElementById('products-list');
+    if (productsListEl) {
+        productsListEl.innerHTML = allProductNames.map(name => `<option value="${name}">`).join('');
+    }
+
+    // 2. قائمة التصنيفات
+    const defaultCategories = ["مياه غازية", "شيبسي وكراتيه", "أجبان وألبان", "بقالة ومواد غذائية", "منظفات", "حلويات والبسكويت"];
+    const savedCategories = JSON.parse(localStorage.getItem('saved_categories') || '[]');
+    const existingCategories = products.map(p => p.category).filter(Boolean);
+    const allCategories = [...new Set([...defaultCategories, ...savedCategories, ...existingCategories])];
+
+    const categoriesListEl = document.getElementById('categories-list');
+    if (categoriesListEl) {
+        categoriesListEl.innerHTML = allCategories.map(cat => `<option value="${cat}">`).join('');
+    }
+
+    // 3. قائمة الوحدات
     const defaultUnits = [
         "كرتونة 24 قطعة",
         "كرتونة 12 قطعة",
@@ -21,12 +40,40 @@ function updateUnitsDatalist() {
         "علبة 10 قطع",
         "قطعة 1"
     ];
+    const savedUnits = JSON.parse(localStorage.getItem('saved_units') || '[]');
+    const existingUnits = products.map(p => p.unit).filter(Boolean);
+    const allUnits = [...new Set([...defaultUnits, ...savedUnits, ...existingUnits])];
 
-    // استخراج كل الوحدات الفريدة المضافة سابقاً من المنتجات
-    const customUnits = products.map(p => p.unit).filter(Boolean);
-    const allUnits = [...new Set([...defaultUnits, ...customUnits])];
+    const unitsListEl = document.getElementById('units-list');
+    if (unitsListEl) {
+        unitsListEl.innerHTML = allUnits.map(unit => `<option value="${unit}">`).join('');
+    }
+}
 
-    datalist.innerHTML = allUnits.map(unit => `<option value="${unit}">`).join('');
+// إضافة القيم الجديدة ديناميكياً للتخزين المحتفظ به
+function saveNewDatalistValues(name, category, unit) {
+    if (name) {
+        const savedNames = JSON.parse(localStorage.getItem('saved_product_names') || '[]');
+        if (!savedNames.includes(name.trim())) {
+            savedNames.push(name.trim());
+            localStorage.setItem('saved_product_names', JSON.stringify(savedNames));
+        }
+    }
+    if (category) {
+        const savedCats = JSON.parse(localStorage.getItem('saved_categories') || '[]');
+        if (!savedCats.includes(category.trim())) {
+            savedCats.push(category.trim());
+            localStorage.setItem('saved_categories', JSON.stringify(savedCats));
+        }
+    }
+    if (unit) {
+        const savedUnits = JSON.parse(localStorage.getItem('saved_units') || '[]');
+        if (!savedUnits.includes(unit.trim())) {
+            savedUnits.push(unit.trim());
+            localStorage.setItem('saved_units', JSON.stringify(savedUnits));
+        }
+    }
+    updateAllDatalists();
 }
 
 // دالة تحديث صندوق المعاينة الحسابية عند الإضافة
@@ -54,27 +101,81 @@ function updateAddProductPreview() {
     }
 }
 
-// تعديل دالة إضافة وحدة جديدة لتعيد تشغيل الحساب الفوري وتحديث القائمة
-function promptAddNewUnit(inputId) {
-    const newUnit = prompt("أدخل مسمى الوحدة الجديدة (مثال: علبة 20 قطعة):");
-    if (newUnit) {
-        const input = document.getElementById(inputId);
-        if (input) {
-            input.value = newUnit;
-            // إطلاق حدث input لضمان إعادة حساب سعر القطعة فوراً
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-        }
+// ==========================================
+// إدارة نافذة إضافة وحدة جديدة (Custom Modal)
+// ==========================================
+let targetUnitInputId = 'p-unit';
+
+function openCustomUnitModal(inputId) {
+    targetUnitInputId = inputId;
+    const modal = document.getElementById('unit-modal');
+    const input = document.getElementById('new-unit-name-input');
+    if (input) input.value = '';
+    if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        setTimeout(() => input && input.focus(), 100);
     }
+}
+
+function closeCustomUnitModal() {
+    const modal = document.getElementById('unit-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+
+function confirmSaveCustomUnit() {
+    const input = document.getElementById('new-unit-name-input');
+    const unitVal = input ? input.value.trim() : '';
+
+    if (!unitVal) {
+        showToast('⚠️ برجاء كتابة مسمى الوحدة أولاً!', 'warning');
+        return;
+    }
+
+    const targetInput = document.getElementById(targetUnitInputId);
+    if (targetInput) {
+        targetInput.value = unitVal;
+        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    saveNewDatalistValues(null, null, unitVal);
+    closeCustomUnitModal();
+    showToast(' تم إضافة الوحدة الجديدة واختيارها بنجاح! ✅');
+}
+
+// ==========================================
+// إدارة الإشعارات المنبثقة الأنيقة (Toast Alerts)
+// ==========================================
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast-notification');
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.className = 'toast-notification show';
+    if (type === 'warning') {
+        toast.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+    } else if (type === 'danger') {
+        toast.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+    } else {
+        toast.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    }
+
+    setTimeout(() => {
+        toast.className = toast.className.replace('show', '');
+    }, 3200);
 }
 
 // معالجة إضافة منتج جديد وتحديث الأحداث
 document.addEventListener('DOMContentLoaded', () => {
-    // تحديث قائمة الوحدات المقترحة فور تحميل الصفحة
-    updateUnitsDatalist();
+    updateAllDatalists();
 
     const productForm = document.getElementById('product-form');
     const priceInput = document.getElementById('p-price');
     const unitInput = document.getElementById('p-unit');
+    const customUnitInput = document.getElementById('new-unit-name-input');
 
     if (priceInput) priceInput.addEventListener('input', updateAddProductPreview);
     if (unitInput) {
@@ -82,15 +183,24 @@ document.addEventListener('DOMContentLoaded', () => {
         unitInput.addEventListener('change', updateAddProductPreview);
     }
     
+    if (customUnitInput) {
+        customUnitInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmSaveCustomUnit();
+            }
+        });
+    }
+
     if (productForm) {
         productForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const name = document.getElementById('p-name').value;
-            const category = document.getElementById('p-category').value;
+            const name = document.getElementById('p-name').value.trim();
+            const category = document.getElementById('p-category').value.trim();
             const price = parseFloat(document.getElementById('p-price').value) || 0;
-            const unit = document.getElementById('p-unit').value;
-            const qty = parseInt(document.getElementById('p-qty').value) || 1;
+            const unit = document.getElementById('p-unit').value.trim();
+            const qty = parseInt(document.getElementById('p-qty').value) ||'';
 
             const piecesCount = extractPieceCount(unit);
             const piecePrice = piecesCount > 0 ? (price / piecesCount) : price;
@@ -111,19 +221,21 @@ document.addEventListener('DOMContentLoaded', () => {
             window.products.push(newProduct);
             localStorage.setItem('products', JSON.stringify(window.products));
 
+            // حفظ الخيارات للقوائم المقترحة أوتوماتيكياً
+            saveNewDatalistValues(name, category, unit);
+
             // الحفظ بداخل IndexedDB إن وجد
             if (window.db) {
                 const tx = window.db.transaction('products', 'readwrite');
                 tx.objectStore('products').add(newProduct);
             }
 
-            alert('تم حفظ المنتج بنجاح!');
+            // إشعار التنبيه المخصص الاحترافي
+            showToast(' تم حفظ المنتج بنجاح في المخزن ! ✅');
             productForm.reset();
+            
             const calcPreview = document.getElementById('calc-preview');
             if (calcPreview) calcPreview.style.display = 'none';
-
-            // تحديث قائمة الوحدات المقترحة بالوحدة الجديدة
-            updateUnitsDatalist();
 
             // تحديث البيانات
             if (typeof updateDashboardStats === 'function') updateDashboardStats();
@@ -132,24 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// حذف منتج مفرد
-function deleteProduct(id) {
-    if (confirm("هل تريد حذف هذا المنتج؟")) {
-        window.products = (window.products || []).filter(p => p.id !== id);
-        localStorage.setItem('products', JSON.stringify(window.products));
-
-        if (window.db) {
-            const tx = window.db.transaction('products', 'readwrite');
-            tx.objectStore('products').delete(id);
-        }
-
-        if (typeof renderInventoryTable === 'function') renderInventoryTable();
-        if (typeof updateDashboardStats === 'function') updateDashboardStats();
-    }
-}
-
 window.extractPieceCount = extractPieceCount;
-window.deleteProduct = deleteProduct;
 window.updateAddProductPreview = updateAddProductPreview;
-window.promptAddNewUnit = promptAddNewUnit;
-window.updateUnitsDatalist = updateUnitsDatalist;
+window.openCustomUnitModal = openCustomUnitModal;
+window.closeCustomUnitModal = closeCustomUnitModal;
+window.confirmSaveCustomUnit = confirmSaveCustomUnit;
+window.showToast = showToast;
+window.updateAllDatalists = updateAllDatalists;
+window.saveNewDatalistValues = saveNewDatalistValues;

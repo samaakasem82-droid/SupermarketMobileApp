@@ -8,26 +8,13 @@
     <!-- مكتبة html2pdf لتصدير ملفات الـ PDF المباشرة -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="manifest" href="manifest.json">
-    <div class="zoom-controller">
-    <label for="zoomRange">حجم العرض:</label>
-    <input type="range" id="zoomRange" min="80" max="130" value="100" step="5" oninput="changeSystemZoom(this.value)">
-    <span id="zoomValue">100%</span>
-    </div>
-    <button id="installAppBtn" class="btn-install btn-install-animated" style="display: none;">
-    <span>📲</span>
-    <span>تثبيت التطبيق</span>
-    </button>
-    <!-- ربط ملف الـ Manifest -->
-    <link rel="manifest" href="manifest.json">
-
+    
     <!-- تحديد لون شريط النظام للأندرويد -->
     <meta name="theme-color" content="#10b981">
 
     <!-- إجبار الآيفون/iOS على فتح التطبيق بكامل الشاشة وبدون شريط -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <!-- زر التثبيت (يكون مخفي افتراضياً) -->
-    
 </head>
 
 <body>
@@ -36,7 +23,18 @@
         <div class="logo">
             🛒 <span>سوبر ماركت</span>
         </div>
-        <div class="offline-badge">● أوفلاين (شغال بدون إنترنت)</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="zoom-controller">
+                <label for="zoomRange">حجم العرض:</label>
+                <input type="range" id="zoomRange" min="80" max="130" value="100" step="5" oninput="changeSystemZoom(this.value)">
+                <span id="zoomValue">100%</span>
+            </div>
+            <button id="installAppBtn" class="btn-install btn-install-animated" style="display: none;">
+                <span>📲</span>
+                <span>تثبيت التطبيق</span>
+            </button>
+            <div class="offline-badge">● أوفلاين (شغال بدون إنترنت)</div>
+        </div>
     </nav>
 
     <div class="container">
@@ -84,14 +82,10 @@
             </div>
         </div>
 
-        <datalist id="units-list">
-            <option value="كرتونة 24 قطعة"></option>
-            <option value="كرتونة 12 قطعة"></option>
-            <option value="باكتة 12 قطعة"></option>
-            <option value="باكتة 6 قطع"></option>
-            <option value="علبة 10 قطع"></option>
-            <option value="قطعة 1"></option>
-        </datalist>
+        <!-- القوائم المنسدلة المقترحة (Datalists) -->
+        <datalist id="products-list"></datalist>
+        <datalist id="categories-list"></datalist>
+        <datalist id="units-list"></datalist>
 
         <!-- 1. صفحة إضافة المنتجات -->
         <div id="add-product-page" class="page-view active">
@@ -102,11 +96,11 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>اسم المنتج</label>
-                        <input type="text" id="p-name" placeholder="مثال: كوكاكولا كانز" required>
+                        <input type="text" id="p-name" list="products-list" placeholder="اختر أو اكتب اسم المنتج..." required>
                     </div>
                     <div class="form-group">
                         <label>التصنيف</label>
-                        <input type="text" id="p-category" placeholder="مثال: مياه غازية" required>
+                        <input type="text" id="p-category" list="categories-list" placeholder="اختر أو اكتب التصنيف..." required>
                     </div>
                     <div class="form-group">
                         <label>سعر العبوة الكلي (ج.م)</label>
@@ -114,13 +108,13 @@
                     </div>                  
                     <div class="form-group">
                         <label>الكمية بالمخزن (بالعبوات)</label>
-                        <input type="number" id="p-qty" placeholder="مثال: 10" value="1" min="0" required>
+                        <input type="number" id="p-qty" placeholder="مثال: 10" value=" " min="0" required>
                     </div>
                      <div class="form-group">
                         <label>الوحدة (مع تحديد عدد القطع)</label>
                         <div class="unit-input-wrapper">
                             <input type="text" id="p-unit" list="units-list" placeholder="مثال: كرتونة 24 ق / باكتة 12" required>
-                            <button type="button" class="btn-add-unit" onclick="promptAddNewUnit('p-unit')">+ وحدة</button>
+                            <button type="button" class="btn-add-unit" onclick="openCustomUnitModal('p-unit')">+ وحدة</button>
                         </div>
                     </div>
                 </div>
@@ -271,11 +265,11 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>اسم المنتج</label>
-                        <input type="text" id="edit-p-name" required>
+                        <input type="text" id="edit-p-name" list="products-list" required>
                     </div>
                     <div class="form-group">
                         <label>التصنيف</label>
-                        <input type="text" id="edit-p-category" required>
+                        <input type="text" id="edit-p-category" list="categories-list" required>
                     </div>
                     <div class="form-group">
                         <label>سعر العبوة الكلي (ج.م)</label>
@@ -289,7 +283,7 @@
                         <label>الوحدة (مثل: كرتونة 24 ق)</label>
                         <div class="unit-input-wrapper">
                             <input type="text" id="edit-p-unit" list="units-list" required>
-                            <button type="button" class="btn-add-unit" onclick="promptAddNewUnit('edit-p-unit')">+ وحدة</button>
+                            <button type="button" class="btn-add-unit" onclick="openCustomUnitModal('edit-p-unit')">+ وحدة</button>
                         </div>
                     </div>
                 </div>
@@ -314,7 +308,7 @@
     <div id="edit-stock-modal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 style="color: var(--warning-color);">✏️️ تعديل الكميات المجرودة</h3>
+                <h3 style="color: var(--warning-color);">✏️ تعديل الكميات المجرودة</h3>
                 <button class="close-btn" onclick="closeEditStockModal()">&times;</button>
             </div>
             <form id="edit-stock-form">
@@ -335,38 +329,90 @@
             </form>
         </div>
     </div>
-  
+
+    <!-- ⚡ نافذة إضافة وحدة جديدة مخصصة (Custom Modal) -->
+    <div id="unit-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 style="color: var(--primary-color);">➕ إضافة وحدة جديدة</h3>
+                <button class="close-btn" onclick="closeCustomUnitModal()">&times;</button>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label>مسمى الوحدة وعدد القطع:</label>
+                <input type="text" id="new-unit-name-input" placeholder="مثال: علبة 20 قطعة" autocomplete="off">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn btn-primary" onclick="confirmSaveCustomUnit()" style="flex: 1;">حفظ وإضافة</button>
+                <button type="button" class="btn-danger" onclick="closeCustomUnitModal()" style="padding: 0.75rem 1rem;">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⚡ عنصر الإشعار المنبثق (Toast Notification) -->
+    <div id="toast-notification" class="toast-notification"></div>
+
+    <!-- نافذة معاينة التقرير والطباعة -->
+    <div id="report-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>📊 معاينة التقرير والطباعة</h3>
+                <button class="close-btn" onclick="closeReportModal()">&times;</button>
+            </div>
+            
+            <div id="report-preview-container" style="background: #fff; color: #000; padding: 20px; border-radius: 8px;"></div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-primary" onclick="triggerPrintFromModal()">🖨️ طباعة التقرير</button>
+                <button type="button" class="btn-export-pdf" onclick="downloadPDFFromModal()" style="padding: 0.8rem 1.5rem;">📥 تنزيل PDF مباشرة</button>
+                <button type="button" class="btn-danger" onclick="closeReportModal()" style="padding: 0.8rem 1.5rem;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
     <script src="db.js"></script>
     <script src="products.js"></script>
     <script src="inventory-view.js"></script>
     <script src="stocktaking.js"></script>
     <script src="app.js"></script>
 
-    <!-- نافذة معاينة التقرير والطباعة -->
-<div id="report-modal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto;">
-        <div class="modal-header">
-            <h3>📊 معاينة التقرير والطباعة</h3>
-            <button class="close-btn" onclick="closeReportModal()">&times;</button>
-        </div>
-        
-        <!-- حاوية عرض شكل الكشف -->
-        <div id="report-preview-container" style="background: #fff; color: #000; padding: 20px; border-radius: 8px;"></div>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+    </script>
 
-        <!-- أزرار التحكم أسفل الكشف -->
-        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
-            <button type="button" class="btn btn-primary" onclick="triggerPrintFromModal()">🖨️ طباعة التقرير</button>
-            <button type="button" class="btn-export-pdf" onclick="downloadPDFFromModal()" style="padding: 0.8rem 1.5rem;">📥 تنزيل PDF مباشرة</button>
-            <button type="button" class="btn-danger" onclick="closeReportModal()" style="padding: 0.8rem 1.5rem;">إغلاق</button>
+    <!-- ========================================== -->
+    <!-- 1. نافذة تأكيد الحذف المنبثقة الاحترافية (Delete Confirmation Modal) -->
+    <!-- ========================================== -->
+    <div id="confirm-delete-modal" class="modal-overlay">
+        <div class="modal-card custom-alert-card border-danger">
+            <div class="alert-icon-wrapper danger-bg">
+                ⚠️
+            </div>
+            <h3 id="confirm-delete-title" class="modal-alert-title">تأكيد عملية الحذف</h3>
+            <p id="confirm-delete-message" class="modal-alert-message">هل أنت تأكد من رغبتك في مسح كافة المنتجات من المخزن؟ لن يمكنك التراجع عن هذه الخطوة.</p>
+            <div class="modal-alert-actions">
+                <button type="button" class="btn btn-danger-action" id="btn-confirm-delete-action">نعم احذف </button>
+                <button type="button" class="btn btn-secondary-action" onclick="closeConfirmDeleteModal()">إلغاء الأمر</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
+    <!-- ========================================== -->
+    <!-- 2. نافذة نجاح تعديل البيانات المنبثقة (Edit Success Modal) -->
+    <!-- ========================================== -->
+    <div id="success-edit-modal" class="modal-overlay">
+        <div class="modal-card custom-alert-card border-success">
+            <div class="alert-icon-wrapper success-bg">
+                ✅
+            </div>
+            <h3 class="modal-alert-title">تم تعديل البيانات بنجاح!</h3>
+            <p class="modal-alert-message">تم حفظ جميع التغييرات وتحديث بيانات المنتج في قاعدة البيانات والأنظمة الحسابية بنجاح.</p>
+            <div class="modal-alert-actions single-action">
+                <button type="button" class="btn btn-success-action" onclick="closeSuccessEditModal()">موافق</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

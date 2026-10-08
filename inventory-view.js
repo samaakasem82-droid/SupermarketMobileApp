@@ -1,3 +1,68 @@
+// ==========================================
+// إدارة النوافذ المنبثقة المخصصة للتحذيرات والنجاح
+// ==========================================
+
+let pendingDeleteCallback = null;
+
+// فتح نافذة التأكيد المنبثقة المخصصة للحذف
+function openConfirmDeleteModal(title, message, onConfirm) {
+    const modal = document.getElementById('confirm-delete-modal');
+    const titleEl = document.getElementById('confirm-delete-title');
+    const msgEl = document.getElementById('confirm-delete-message');
+    const confirmBtn = document.getElementById('btn-confirm-delete-action');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+
+    pendingDeleteCallback = onConfirm;
+
+    if (confirmBtn) {
+        confirmBtn.onclick = () => {
+            if (typeof pendingDeleteCallback === 'function') {
+                pendingDeleteCallback();
+            }
+            closeConfirmDeleteModal();
+        };
+    }
+
+    if (modal) {
+        modal.classList.add('active');
+        modal.style.setProperty('display', 'flex', 'important');
+    }
+}
+
+// إغلاق نافذة تأكيد الحذف
+function closeConfirmDeleteModal() {
+    const modal = document.getElementById('confirm-delete-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.setProperty('display', 'none', 'important');
+    }
+    pendingDeleteCallback = null;
+}
+
+// فتح نافذة نجاح التعديل المنبثقة المخصصة
+function openSuccessEditModal() {
+    const modal = document.getElementById('success-edit-modal');
+    if (modal) {
+        modal.classList.add('active');
+        modal.style.setProperty('display', 'flex', 'important');
+    }
+}
+
+// إغلاق نافذة نجاح التعديل
+function closeSuccessEditModal() {
+    const modal = document.getElementById('success-edit-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.setProperty('display', 'none', 'important');
+    }
+}
+
+// ==========================================
+// عرض جدول المخزن وتحديثه
+// ==========================================
+
 // دالة عرض جدول المخزن
 function renderInventoryTable() {
     const tbody = document.getElementById('inventory-tbody');
@@ -99,7 +164,6 @@ function updateEditPreview() {
     const price = parseFloat(priceInput.value) || 0;
     const unitStr = unitInput.value;
     
-    // استخراج عدد القطع لحساب سعر القطعة الفرعية
     const piecesCount = typeof extractPieceCount === 'function' ? extractPieceCount(unitStr) : 1;
     const piecePrice = piecesCount > 0 ? (price / piecesCount) : price;
 
@@ -110,26 +174,52 @@ function updateEditPreview() {
     if (piecePriceEl) piecePriceEl.textContent = piecePrice.toFixed(2) + ' ج.م';
 }
 
-// حذف منتج من المخزن
+// حذف منتج من المخزن باستخدام نافذة التأكيد الاحترافية
 function deleteProduct(id) {
-    if (confirm("هل أنت تأكد من حذف هذا المنتج من المخزن؟")) {
-        let products = window.products || JSON.parse(localStorage.getItem('products') || '[]');
-        products = products.filter(p => p.id !== id);
-        
-        window.products = products;
-        localStorage.setItem('products', JSON.stringify(products));
+    openConfirmDeleteModal(
+        "تأكيد حذف المنتج",
+        "هل أنت تأكد من رغبتك في حذف هذا المنتج من المخزن؟",
+        function() {
+            let products = window.products || JSON.parse(localStorage.getItem('products') || '[]');
+            products = products.filter(p => p.id !== id);
+            
+            window.products = products;
+            localStorage.setItem('products', JSON.stringify(products));
 
-        if (window.db) {
-            const tx = window.db.transaction('products', 'readwrite');
-            tx.objectStore('products').delete(id);
+            if (window.db) {
+                const tx = window.db.transaction('products', 'readwrite');
+                tx.objectStore('products').delete(id);
+            }
+
+            renderInventoryTable();
+            if (typeof updateDashboardStats === 'function') updateDashboardStats();
+            if (typeof showToast === 'function') showToast('🗑️ تم حذف المنتج من المخزن بنجاح', 'danger');
         }
-
-        renderInventoryTable();
-        if (typeof updateDashboardStats === 'function') updateDashboardStats();
-    }
+    );
 }
 
-// حفظ تعديل المنتج بالمخزن عند إرسال النموذج
+// مسح كافة المنتجات باستخدام نافذة التأكيد الاحترافية
+function clearAllProducts() {
+    openConfirmDeleteModal(
+        "مسح كافة المنتجات",
+        "هل أنت تأكد من مسح جميع المنتجات من المخزن بالكامل؟ لن يمكنك التراجع عن هذه الخطوة.",
+        function() {
+            window.products = [];
+            localStorage.setItem('products', JSON.stringify([]));
+            
+            if (window.db) {
+                const tx = window.db.transaction('products', 'readwrite');
+                tx.objectStore('products').clear();
+            }
+
+            renderInventoryTable();
+            if (typeof updateDashboardStats === 'function') updateDashboardStats();
+            if (typeof showToast === 'function') showToast('🗑️ تم تفريغ المخزن بالكامل!', 'danger');
+        }
+    );
+}
+
+// حفظ تعديل المنتج بالمخزن عند إرسال النموذج مع النافذة المنبثقة الجديدة
 document.addEventListener('DOMContentLoaded', () => {
     const editForm = document.getElementById('edit-product-form');
     if (editForm) {
@@ -137,10 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             const id = parseInt(document.getElementById('edit-p-id').value);
-            const name = document.getElementById('edit-p-name').value;
-            const category = document.getElementById('edit-p-category').value;
+            const name = document.getElementById('edit-p-name').value.trim();
+            const category = document.getElementById('edit-p-category').value.trim();
             const price = parseFloat(document.getElementById('edit-p-price').value) || 0;
-            const unit = document.getElementById('edit-p-unit').value;
+            const unit = document.getElementById('edit-p-unit').value.trim();
             const qty = parseInt(document.getElementById('edit-p-qty').value) || 0;
 
             const piecesCount = typeof extractPieceCount === 'function' ? extractPieceCount(unit) : 1;
@@ -154,6 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.products = products;
                 localStorage.setItem('products', JSON.stringify(products));
 
+                if (typeof saveNewDatalistValues === 'function') {
+                    saveNewDatalistValues(name, category, unit);
+                }
+
                 if (window.db) {
                     const tx = window.db.transaction('products', 'readwrite');
                     tx.objectStore('products').put(products[index]);
@@ -163,12 +257,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof updateDashboardStats === 'function') updateDashboardStats();
 
                 closeEditModal();
-                alert('تم تحديث بيانات المنتج بنجاح!');
+                
+                // إظهار نافذة نجاح التعديل المنبثقة بدلاً من رسالة الويب العادية
+                openSuccessEditModal();
             }
         });
     }
 
-    // إغلاق نافذة التعديل عند النقر خارج البطاقة
     const editModal = document.getElementById('edit-modal');
     if (editModal) {
         editModal.addEventListener('click', (e) => {
@@ -178,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // الاستجابة الفورية لمدخلات نموذج التعديل
     const editPriceInput = document.getElementById('edit-p-price');
     const editUnitInput = document.getElementById('edit-p-unit');
 
@@ -186,31 +280,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editUnitInput) editUnitInput.addEventListener('input', updateEditPreview);
 });
 
-// مسح كافة المنتجات
-function clearAllProducts() {
-    if (confirm("هل أنت تأكد من مسح جميع المنتجات من المخزن؟")) {
-        window.products = [];
-        localStorage.setItem('products', JSON.stringify([]));
-        
-        if (window.db) {
-            const tx = window.db.transaction('products', 'readwrite');
-            tx.objectStore('products').clear();
-        }
-
-        renderInventoryTable();
-        if (typeof updateDashboardStats === 'function') updateDashboardStats();
-    }
-}
-
 // ==========================================
 // تصدير سلع المخزن إلى Word و PDF والطباعة
 // ==========================================
 
-// 1. تصدير قائمة المخزن إلى ملف Word
 function exportInventoryToWord() {
     const products = window.products || JSON.parse(localStorage.getItem('products') || '[]');
     if (products.length === 0) {
-        alert("جدول المخزن فارغ حالياً!");
+        if (typeof showToast === 'function') showToast('⚠️ جدول المخزن فارغ حالياً!', 'warning');
         return;
     }
 
@@ -278,11 +355,10 @@ function exportInventoryToWord() {
     a.click();
 }
 
-// 2. معاينة وتصدير قائمة المخزن إلى PDF والطباعة
 function exportInventoryToPDF() {
     const products = window.products || JSON.parse(localStorage.getItem('products') || '[]');
     if (products.length === 0) {
-        alert("جدول المخزن فارغ حالياً!");
+        if (typeof showToast === 'function') showToast('⚠️ جدول المخزن فارغ حالياً!', 'warning');
         return;
     }
 
@@ -366,7 +442,10 @@ function exportInventoryToPDF() {
     }
 }
 
-// إتاحة الدوال للبيئة العامة
+// ==========================================
+// تصدير الدوال لنطاق window العام
+// ==========================================
+
 window.renderInventoryTable = renderInventoryTable;
 window.openEditProductModal = openEditProductModal;
 window.closeEditModal = closeEditModal;
@@ -374,3 +453,7 @@ window.deleteProduct = deleteProduct;
 window.clearAllProducts = clearAllProducts;
 window.exportInventoryToWord = exportInventoryToWord;
 window.exportInventoryToPDF = exportInventoryToPDF;
+window.openConfirmDeleteModal = openConfirmDeleteModal;
+window.closeConfirmDeleteModal = closeConfirmDeleteModal;
+window.openSuccessEditModal = openSuccessEditModal;
+window.closeSuccessEditModal = closeSuccessEditModal;
