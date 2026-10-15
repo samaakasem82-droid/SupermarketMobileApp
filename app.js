@@ -250,8 +250,10 @@ function renderLicenseModal() {
             <button id="activateSystemBtn" class="license-btn">تفعيل النظام الآن</button>
             <div id="licenseErrorMsg" class="license-error-msg">⚠️ كود التفعيل غير صحيح، يرجى المراجعة والمحاولة مجدداً</div>
 
-            <div class="license-footer">
-                نظام إدارة الجرد والمخزون أوفلاين &bull; جميع الحقوق محفوظة
+            <div class="license-footer" style="margin-top: 24px; font-size: 13px; color: #9e9ea7; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; line-height: 1.8;">
+                <div style="color: #ffb300; font-weight: bold; margin-bottom: 4px;">🔒 نظام إدارة و جرد السوبر ماركت أوفلاين</div>
+                <div>تم تصميم وبرمجة السيستم بواسطة: <strong style="color: #0ca044;">المهندسة سماء قاسم</strong></div>
+                <div style="font-size: 11px; color: #64748b; margin-top: 4px;">جميع الحقوق محفوظة © 2026</div>
             </div>
         </div>
     `;

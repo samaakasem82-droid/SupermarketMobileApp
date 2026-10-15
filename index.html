@@ -20,20 +20,35 @@
 <body>
 
     <nav class="navbar">
+        
         <div class="logo">
+            <div class="zoom-controller" style="padding: 4px 1px; font-size: 13px;">
+                    <label for="zoomRange" style="font-size: 12px; color: var(--text-muted, #94a3b8);">حجم العرض:</label>
+                    <input type="range" id="zoomRange" min="80" max="150" value="100" step="5" oninput="changeSystemZoom(this.value)">
+                    <span id="zoomValue" style="font-weight: bold; color: var(--primary-color, #10b981);">100%</span>
+                </div>
             🛒 <span>سوبر ماركت</span>
+           
+           
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="zoom-controller">
-                <label for="zoomRange">حجم العرض:</label>
-                <input type="range" id="zoomRange" min="80" max="130" value="100" step="5" oninput="changeSystemZoom(this.value)">
-                <span id="zoomValue">100%</span>
-            </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">         
             <button id="installAppBtn" class="btn-install btn-install-animated" style="display: none;">
                 <span>📲</span>
                 <span>تثبيت التطبيق</span>
             </button>
-            <div class="offline-badge">● أوفلاين (شغال بدون إنترنت)</div>
+                     
+            <!-- حاوية تجمع علامة الأوفلاين وشريط التكبير أسفل منها مباشرة -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+             <br>
+             <br>
+                <div class="offline-badge">● أوفلاين (شغال بدون إنترنت)</div>
+
+
+
+                
+                
+                
         </div>
     </nav>
 
@@ -368,6 +383,15 @@
             </div>
         </div>
     </div>
+    
+    </div> <!-- نهاية الحاوية الرئيسية container -->
+
+    <!-- 🌟 الفوتر الثابت الخاص ببصمتك في أسفل السيستم بالكامل -->
+    <footer style="max-width: 1200px; margin: 3rem auto 1.5rem auto; padding: 1.5rem 1rem; text-align: center; border-top: 1px dashed var(--border-color, #334155); color: #9e9ea7; font-size: 13px; line-height: 1.8;">
+       
+        <div>تم تصميم وبرمجة السيستم بواسطة: <strong style="color: #0ca044;">المهندسة سماء قاسم</strong></div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">جميع الحقوق محفوظة © 2026</div>
+    </footer>
 
     <script src="db.js"></script>
     <script src="products.js"></script>

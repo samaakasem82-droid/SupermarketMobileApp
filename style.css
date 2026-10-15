@@ -321,17 +321,22 @@ th {
 }
 
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(15, 23, 42, 0.85);
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.85) !important;
     display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 99999;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 999999 !important;
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    overflow-y: auto !important;
 }
 
 .modal-overlay.active {
@@ -340,14 +345,16 @@ th {
 
 .modal-card {
     background: var(--card-bg);
-    width: 90%;
+    width: 100% !important;
     max-width: 550px;
     padding: 2rem;
     border-radius: var(--radius);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
-    max-height: 90vh;
-    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    max-height: 85vh !important;
+    overflow-y: auto !important;
     border: 1px solid var(--border-color);
+    margin: auto !important; /* ضمان التمركز التام في المنتصف مهما تغير الـ Zoom */
+    box-sizing: border-box !important;
 }
 
 .modal-header {
